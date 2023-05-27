@@ -1,3 +1,12 @@
+const http2 = require('http2');
+
+const {
+  HTTP_STATUS_OK,
+  HTTP_STATUS_CREATED,
+  HTTP_STATUS_BAD_REQUEST,
+  HTTP_STATUS_NOT_FOUND,
+  HTTP_STATUS_INTERNAL_SERVER_ERROR,
+} = http2.constants;
 const { isValidObjectId } = require('mongoose');
 const cardModel = require('../models/card');
 
@@ -8,7 +17,7 @@ const getCards = (req, res) => {
       res.send(cards);
     })
     .catch(() => {
-      res.status(500).send({
+      res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
         message: 'Внутренняя ошибка сервера',
       });
     });
@@ -21,19 +30,24 @@ const createCard = (req, res) => {
       ...req.body,
     })
     .then((card) => {
-      res.status(201).send(card);
+      res.status(HTTP_STATUS_CREATED).send(card);
     })
-    .catch(() => {
-      res.status(400).send({
-        message: 'Указаны некорректные данные при создании карточки',
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        return res.status(HTTP_STATUS_BAD_REQUEST).send({
+          message: 'Указаны некорректные данные при создании карточки',
+        });
+      }
+      return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
+        message: 'Внутренняя ошибка сервера',
       });
     });
 };
-
+/* eslint-disable consistent-return */
 const removeCard = (req, res) => {
   if (!isValidObjectId(req.params.cardId)) {
     return res
-      .status(400)
+      .status(HTTP_STATUS_BAD_REQUEST)
       .send({ message: 'Переданы некорректные данные для удаления карточки' });
   }
   cardModel
@@ -41,23 +55,23 @@ const removeCard = (req, res) => {
     .then(({ deletedCount }) => {
       if (!deletedCount) {
         return res
-          .status(404)
+          .status(HTTP_STATUS_NOT_FOUND)
           .send({ message: 'По указанному id карточка не найдена' });
       }
-      return res.status(200).send({ message: 'Карточка удалена' });
+      return res.status(HTTP_STATUS_OK).send({ message: 'Карточка удалена' });
     })
-    .catch((err) => {
-      res.status(500).send({ message: 'Внутренняя ошибка сервера' });
+    .catch(() => {
+      res
+        .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
+        .send({ message: 'Внутренняя ошибка сервера' });
     });
 };
 
 const cardLike = (req, res) => {
-  console.log(req.user);
-  console.log(req.params);
-  if (!isValidObjectId(req.user._id) || !isValidObjectId(req.params.cardId)) {
-    return res
-      .status(400)
-      .send({ message: 'Переданы некорректные данные для установки лайка' });
+  if (!isValidObjectId(req.params.cardId)) {
+    return res.status(HTTP_STATUS_BAD_REQUEST).send({
+      message: 'Переданы некорректный id пользователя для установки лайка',
+    });
   }
 
   cardModel
@@ -66,22 +80,27 @@ const cardLike = (req, res) => {
       { $addToSet: { likes: req.user._id } },
       { new: true },
     )
+    /* eslint-disable consistent-return */
     .then((card) => {
       if (!card) {
-        return res.status(404).send({ message: 'Карточка не найдена' });
+        return res
+          .status(HTTP_STATUS_NOT_FOUND)
+          .send({ message: 'Карточка не найдена' });
       }
-      res.status(201).send(card.likes);
+      res.status(HTTP_STATUS_CREATED).send(card.likes);
     })
     .catch(() => {
-      res.status(500).send({ message: 'Внутренняя ошибка сервера' });
+      res
+        .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
+        .send({ message: 'Внутренняя ошибка сервера' });
     });
 };
 
 const cardDislike = (req, res) => {
-  if (!isValidObjectId(req.user._id) || !isValidObjectId(req.params.cardId)) {
-    return res
-      .status(400)
-      .send({ message: 'Переданы некорректные данные для снятия лайка' });
+  if (!isValidObjectId(req.params.cardId)) {
+    return res.status(HTTP_STATUS_BAD_REQUEST).send({
+      message: 'Передан некорректный id пользователя для снятия лайка',
+    });
   }
 
   cardModel
@@ -92,12 +111,16 @@ const cardDislike = (req, res) => {
     )
     .then((card) => {
       if (!card) {
-        return res.status(404).send({ message: 'Карточка не найдена' });
+        return res
+          .status(HTTP_STATUS_NOT_FOUND)
+          .send({ message: 'Карточка не найдена' });
       }
-      res.status(200).send(card.likes);
+      res.status(HTTP_STATUS_OK).send(card.likes);
     })
     .catch(() => {
-      res.status(500).send({ message: 'Внутренняя ошибка сервера' });
+      res
+        .status(HTTP_STATUS_INTERNAL_SERVER_ERROR)
+        .send({ message: 'Внутренняя ошибка сервера' });
     });
 };
 

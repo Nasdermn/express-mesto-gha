@@ -1,3 +1,11 @@
+const http2 = require('http2');
+
+const {
+  HTTP_STATUS_CREATED,
+  HTTP_STATUS_BAD_REQUEST,
+  HTTP_STATUS_NOT_FOUND,
+  HTTP_STATUS_INTERNAL_SERVER_ERROR,
+} = http2.constants;
 const userModel = require('../models/user');
 
 const getUsers = (req, res) => {
@@ -7,14 +15,13 @@ const getUsers = (req, res) => {
       res.send(users);
     })
     .catch(() => {
-      res.status(500).send({
+      res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
         message: 'Невозможно получить список пользователей',
       });
     });
 };
 
 const getUserById = (req, res) => {
-  console.log(req.params);
   userModel
     .findById(req.params.id)
     .orFail()
@@ -23,16 +30,16 @@ const getUserById = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'DocumentNotFoundError') {
-        return res.status(404).send({
+        return res.status(HTTP_STATUS_NOT_FOUND).send({
           message: 'Пользователь с указанным _id не найден',
         });
       }
       if (err.name === 'CastError') {
-        return res.status(400).send({
-          message: '_id пользователя указан некорректно',
+        return res.status(HTTP_STATUS_BAD_REQUEST).send({
+          message: 'Пользователя с указанным _id не существует',
         });
       }
-      return res.status(500).send({
+      return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
         message: 'Внутренняя ошибка сервера',
       });
     });
@@ -42,18 +49,21 @@ const createUser = (req, res) => {
   userModel
     .create(req.body)
     .then((user) => {
-      res.status(201).send(user);
+      res.status(HTTP_STATUS_CREATED).send(user);
     })
-    .catch(() => {
-      res.status(400).send({
-        message: 'Указаны некорректные данные при создании пользователя',
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        return res.status(HTTP_STATUS_BAD_REQUEST).send({
+          message: 'Указаны некорректные данные при создании пользователя',
+        });
+      }
+      return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
+        message: 'Внутренняя ошибка сервера',
       });
     });
 };
 
 const updateUser = (req, res) => {
-  console.log(req.user);
-  console.log(req.body);
   const { name, about } = req.body;
   userModel
     .findByIdAndUpdate(
@@ -68,12 +78,17 @@ const updateUser = (req, res) => {
       res.send(user);
     })
     .catch((err) => {
+      if (err.name === 'DocumentNotFoundError') {
+        return res.status(HTTP_STATUS_NOT_FOUND).send({
+          message: 'Пользователь с указанным _id не найден',
+        });
+      }
       if (err.name === 'ValidationError') {
-        return res.status(400).send({
+        return res.status(HTTP_STATUS_BAD_REQUEST).send({
           message: 'Переданы некорректные данные при обновлении профиля',
         });
       }
-      return res.status(500).send({
+      return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
         message: 'Внутренняя ошибка сервера',
       });
     });
@@ -94,12 +109,17 @@ const updateAvatar = (req, res) => {
       res.send(user);
     })
     .catch((err) => {
+      if (err.name === 'DocumentNotFoundError') {
+        return res.status(HTTP_STATUS_NOT_FOUND).send({
+          message: 'Пользователь с указанным _id не найден',
+        });
+      }
       if (err.name === 'ValidationError') {
-        return res.status(400).send({
+        return res.status(HTTP_STATUS_BAD_REQUEST).send({
           message: 'Переданы некорректные данные при обновлении аватара',
         });
       }
-      return res.status(500).send({
+      return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
         message: 'Внутренняя ошибка сервера',
       });
     });
