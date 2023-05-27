@@ -24,8 +24,8 @@ const createCard = (req, res) => {
       res.status(201).send(card);
     })
     .catch(() => {
-      res.status(500).send({
-        message: 'Внутренняя ошибка сервера',
+      res.status(400).send({
+        message: 'Указаны некорректные данные при создании карточки',
       });
     });
 };
