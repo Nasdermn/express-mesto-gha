@@ -1,5 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const http2 = require('http2');
+
 const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
 
@@ -21,7 +23,7 @@ app.use('/users', userRouter);
 app.use('/cards', cardRouter);
 app.use((req, res) => {
   res
-    .status(404)
+    .status(http2.constants.HTTP_STATUS_NOT_FOUND)
     .send({ message: 'По указанному вами адресу страница не найдена' });
 });
 
