@@ -1,9 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const http2 = require('http2');
+const { errors } = require('celebrate');
 
-const userRouter = require('./routes/users');
-const cardRouter = require('./routes/cards');
+const router = require('./routes');
 
 mongoose.connect('mongodb://127.0.0.1/mestodb');
 
@@ -12,19 +11,15 @@ const app = express();
 
 app.use(express.json());
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: '64721ad4b0f1980b91365b65',
-  };
-  next();
-});
+app.use(router);
+app.use(errors());
 
-app.use('/users', userRouter);
-app.use('/cards', cardRouter);
-app.use((req, res) => {
-  res
-    .status(http2.constants.HTTP_STATUS_NOT_FOUND)
-    .send({ message: 'По указанному вами адресу страница не найдена' });
+app.use((err, req, res, next) => {
+  const { status = 500, message } = err;
+  res.status(status).send({
+    message: status === 500 ? 'На сервере произошла ошибка' : message,
+  });
+  next();
 });
 
 app.listen(PORT, () => {
