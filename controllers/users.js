@@ -78,14 +78,10 @@ const createUser = (req, res, next) => {
       })
       .catch((err) => {
         if (err.code === MONGO_DUPLICATE_KEY_ERROR) {
-          throw new ConflictError(
-            'Попытка создания пользователя с уже существующим email',
-          );
+          return next(new ConflictError('Попытка создания пользователя с уже существующим email'));
         }
         if (err.name === 'ValidationError') {
-          throw new BadRequestError(
-            'Указаны некорректные данные при создании пользователя',
-          );
+          return next(new BadRequestError('Указаны некорректные данные при создании пользователя'));
         }
         return next(err);
       });
