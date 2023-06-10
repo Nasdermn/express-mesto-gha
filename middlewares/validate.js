@@ -1,18 +1,18 @@
 const { celebrate, Joi } = require('celebrate');
 const { urlRegex } = require('../utils/constants');
 
-const signupValidation = celebrate({
+const signinValidation = celebrate({
   body: Joi.object().keys({
     email: Joi.string().required().email(),
     password: Joi.string().required(),
   }),
 });
 
-const signinValidation = celebrate({
+const signupValidation = celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string(),
+    avatar: Joi.string().regex(urlRegex),
     email: Joi.string().required().email(),
     password: Joi.string().required(),
   }),

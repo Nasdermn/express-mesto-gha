@@ -9,11 +9,9 @@ const {
   signupValidation,
 } = require('../middlewares/validate');
 
-router.post('/signin', signinValidation, usersController.createUser);
-router.post('/signup', signupValidation, usersController.login);
-
+router.post('/signup', signupValidation, usersController.createUser);
+router.post('/signin', signinValidation, usersController.login);
 router.use(auth);
-
 router.use('/users', userRouter);
 router.use('/cards', cardRouter);
 
