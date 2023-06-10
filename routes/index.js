@@ -17,8 +17,6 @@ router.use(auth);
 router.use('/users', userRouter);
 router.use('/cards', cardRouter);
 
-router.use('*', (req, res, next) =>
-  next(new NotFoundError('По указанному вами адресу страница не найдена')),
-);
+router.use('*', (req, res, next) => next(new NotFoundError('По указанному вами адресу страница не найдена')));
 
 module.exports = router;
