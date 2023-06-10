@@ -48,10 +48,10 @@ const getUserById = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'DocumentNotFoundError') {
-        throw new NotFoundError('Пользователь с указанным _id не найден');
+        return next(new NotFoundError('Пользователь с указанным _id не найден'));
       }
       if (err.name === 'CastError') {
-        throw new BadRequestError('Пользователя с указанным _id не существует');
+        return next(new BadRequestError('Пользователя с указанным _id не существует'));
       }
       return next(err);
     });
