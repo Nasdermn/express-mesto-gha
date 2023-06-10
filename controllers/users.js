@@ -85,7 +85,8 @@ const createUser = (req, res, next) => {
         }
         return next(err);
       });
-  });
+  })
+    .catch(next);
 };
 
 const login = (req, res, next) => {
@@ -113,13 +114,13 @@ const updateUser = (req, res, next) => {
         runValidators: true, // данные будут валидированы перед изменением
       },
     )
+    .orFail(() => {
+      throw new NotFoundError('Пользователь с указанным _id не найден');
+    })
     .then((user) => {
       res.send(user);
     })
     .catch((err) => {
-      if (err.name === 'DocumentNotFoundError') {
-        throw new NotFoundError('Пользователь с указанным _id не найден');
-      }
       if (err.name === 'ValidationError') {
         throw new BadRequestError(
           'Указаны некорректные данные при обновлении профиля',
@@ -140,13 +141,13 @@ const updateAvatar = (req, res, next) => {
         runValidators: true, // данные будут валидированы перед изменением
       },
     )
+    .orFail(() => {
+      throw new NotFoundError('Пользователь с указанным _id не найден');
+    })
     .then((user) => {
       res.send(user);
     })
     .catch((err) => {
-      if (err.name === 'DocumentNotFoundError') {
-        throw new NotFoundError('Пользователь с указанным _id не найден');
-      }
       if (err.name === 'ValidationError') {
         throw new BadRequestError(
           'Указаны некорректные данные при обновлении аватара',

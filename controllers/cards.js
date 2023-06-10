@@ -1,4 +1,3 @@
-const { isValidObjectId } = require('mongoose');
 const cardModel = require('../models/card');
 const NotFoundError = require('../utils/errors/NotFoundError');
 const BadRequestError = require('../utils/errors/BadRequestError');
@@ -14,11 +13,10 @@ const getCards = (req, res, next) => {
 };
 
 const createCard = (req, res, next) => {
+  const owner = req.user._id;
+  const { name, link } = req.body;
   cardModel
-    .create({
-      owner: req.user._id,
-      ...req.body,
-    })
+    .create({ name, link, owner })
     .then((card) => {
       res.status(201).send(card);
     })
@@ -58,12 +56,6 @@ const removeCard = (req, res, next) => {
 };
 
 const cardLike = (req, res, next) => {
-  if (!isValidObjectId(req.params.cardId)) {
-    throw new BadRequestError(
-      'Передан некорректный id пользователя для установки лайка',
-    );
-  }
-
   cardModel
     .findByIdAndUpdate(
       req.params.cardId,
@@ -80,12 +72,6 @@ const cardLike = (req, res, next) => {
 };
 
 const cardDislike = (req, res, next) => {
-  if (!isValidObjectId(req.params.cardId)) {
-    throw new BadRequestError(
-      'Передан некорректный id пользователя для снятия лайка',
-    );
-  }
-
   cardModel
     .findByIdAndUpdate(
       req.params.cardId,
